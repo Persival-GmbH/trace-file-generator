@@ -1,0 +1,88 @@
+name: CI
+
+on:
+  workflow_dispatch:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  linter:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.8"
+
+    - name: Upgrade pip
+      run: python -m pip install --upgrade pip
+
+  build-validator:
+    strategy:
+      fail-fast: false
+      matrix:
+        runs-on: [ubuntu-latest]
+        protobuf-version: ['3.0.0', '3.15.0', '3.20.1']
+
+    name: "${{ matrix.protobuf-version }} • ${{ matrix.runs-on }}"
+    runs-on: ${{ matrix.runs-on }}
+
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+      with:
+        lfs: true
+
+    - name: Set up Python 3.8
+      uses: actions/setup-python@v5
+      with:
+        python-version: "3.8"
+
+    - name: Cache Dependencies
+      id: cache-depends
+      uses: actions/cache@v3
+      with:
+        path: protobuf-${{ matrix.protobuf-version }}
+        key: ${{ runner.os }}-${{ matrix.protobuf-version }}
+
+    - name: Download ProtoBuf
+      if: steps.cache-depends.outputs.cache-hit != 'true'
+      run: curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v${{ matrix.protobuf-version }}/protobuf-all-${{ matrix.protobuf-version }}.tar.gz && tar xzvf protobuf-all-${{ matrix.protobuf-version }}.tar.gz
+
+    - name: Build ProtoBuf
+      if: steps.cache-depends.outputs.cache-hit != 'true'
+      working-directory: protobuf-${{ matrix.protobuf-version }}
+      run: ./configure DIST_LANG=cpp --prefix=/usr && make
+
+    - name: Install ProtoBuf
+      working-directory: protobuf-${{ matrix.protobuf-version }}
+      run: sudo make install && sudo ldconfig
+
+    - name: Install Open Simulation Interface
+      shell: bash
+      run: |
+        git submodule update --init
+        python -m venv .venv
+        source .venv/bin/activate
+        python -m pip install --upgrade pip
+        cd open-simulation-interface && pip install . && cd .. 
+
+    - name: Run trace generator
+      run: |
+        source .venv/bin/activate
+        python generate_test_trace.py
+        cp output.osi 20000101T080000Z_sv_360_${{ matrix.protobuf-version }}_10_test.osi
+
+    - name: Archive built FMU
+      uses: actions/upload-artifact@v3
+      with:
+        name: 20000101T080000Z_sv_360_${{ matrix.protobuf-version }}_10_test
+        path: 20000101T080000Z_sv_360_${{ matrix.protobuf-version }}_10_test.osi
