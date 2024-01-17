@@ -1,7 +1,7 @@
 from osi3.osi_sensorview_pb2 import SensorView
 import struct
 
-f = open("20000101T080000Z_sv_360_2112_10_test.osi", "ab")
+f = open("output.osi", "ab")
 sensorview = SensorView()
 
 sv_ground_truth = sensorview.global_ground_truth
