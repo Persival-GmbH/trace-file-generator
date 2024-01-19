@@ -1,7 +1,9 @@
 from osi3.osi_sensorview_pb2 import SensorView
 import struct
+import lzma
 
-f = open("output.osi", "ab")
+#f = lzma.open("output.lzma", "ab")
+f = lzma.open("output.osi", "ab")
 sensorview = SensorView()
 
 sv_ground_truth = sensorview.global_ground_truth
@@ -11,6 +13,7 @@ sv_ground_truth.version.version_patch = 0
 
 sv_ground_truth.timestamp.seconds = 0
 sv_ground_truth.timestamp.nanos = 0
+sv_ground_truth.host_vehicle_id.value = 113
 
 moving_object = sv_ground_truth.moving_object.add()
 moving_object.id.value = 114
@@ -40,3 +43,4 @@ for i in range(10):
     f.write(struct.pack("<L", len(bytes_buffer)) + bytes_buffer)
 
 f.close()
+
