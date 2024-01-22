@@ -49,16 +49,16 @@ jobs:
       run: curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v${{ matrix.protobuf-version }}/protobuf${{ matrix.protobuf-variant }}-${{ matrix.protobuf-version }}.tar.gz && tar xzvf protobuf${{ matrix.protobuf-variant }}-${{ matrix.protobuf-version }}.tar.gz
 
     - name: Download Abseil ${{ matrix.abseil-version }}
-      if: steps.cache-depends.outputs.cache-hit != 'true' && !protobuf-use-autotools
+      if: steps.cache-depends.outputs.cache-hit != 'true' && !matrix.protobuf-use-autotools
       run: curl -OL https://github.com/abseil/abseil-cpp/archive/refs/tags/${{matrix.abseil-version}}.tar.gz && tar xzvf ${{matrix.abseil-version}}.tar.gz && rm -rf protobuf-${{matrix.protobuf-version}}/third_party/abseil-cpp && mv abseil-cpp-${{matrix.abseil-version}} protobuf-${{matrix.protobuf-version}}/third_party/abseil-cpp
 
     - name: Build ProtoBuf ${{ matrix.protobuf-version }} via autotools
-      if: steps.cache-depends.outputs.cache-hit != 'true' && protobuf-use-autotools
+      if: steps.cache-depends.outputs.cache-hit != 'true' && matrix.protobuf-use-autotools
       working-directory: protobuf-${{ matrix.protobuf-version }}
       run: ./configure DIST_LANG=cpp --prefix=/usr && make
 
     - name: Build ProtoBuf ${{ matrix.protobuf-version }} via cmake
-      if: steps.cache-depends.outputs.cache-hit != 'true' && !protobuf-use-autotools
+      if: steps.cache-depends.outputs.cache-hit != 'true' && !matrix.protobuf-use-autotools
       working-directory: protobuf-${{ matrix.protobuf-version }}
       run: cmake -DCMAKE_CXX_STANDARD=17 -Dprotobuf_BUILD_SHARED_LIBS=ON -Dprotobuf_BUILD_TESTS=OFF . && cmake --build . --config Release -j 4
 
