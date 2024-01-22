@@ -46,10 +46,15 @@ jobs:
       if: steps.cache-depends.outputs.cache-hit != 'true'
       run: curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v${{ matrix.protobuf-version }}/protobuf${{ matrix.protobuf-variant }}-${{ matrix.protobuf-version }}.tar.gz && tar xzvf protobuf${{ matrix.protobuf-variant }}-${{ matrix.protobuf-version }}.tar.gz
 
-    - name: Build ProtoBuf
-      if: steps.cache-depends.outputs.cache-hit != 'true'
+    - name: Build ProtoBuf ${{ matrix.protobuf-version }} via autotools
+      if: steps.cache-depends.outputs.cache-hit != 'true' && ${{ matrix.protobuf-variant }} == '-all'
       working-directory: protobuf-${{ matrix.protobuf-version }}
       run: ./configure DIST_LANG=cpp --prefix=/usr && make
+
+    - name: Build ProtoBuf ${{ matrix.protobuf-version }} via cmake
+      if: steps.cache-depends.outputs.cache-hit != 'true' && ${{ matrix.protobuf-variant }} == ''
+      working-directory: protobuf-${{ matrix.protobuf-version }}
+      run: cmake -DCMAKE_CXX_STANDARD=17 -Dprotobuf_BUILD_SHARED_LIBS=ON -Dprotobuf_BUILD_TESTS=OFF . && cmake --build . --config Release -j 4
 
     - name: Install ProtoBuf
       working-directory: protobuf-${{ matrix.protobuf-version }}
