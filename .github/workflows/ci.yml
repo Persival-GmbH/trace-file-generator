@@ -47,7 +47,7 @@ jobs:
       run: curl -OL https://github.com/protocolbuffers/protobuf/releases/download/v${{ matrix.protobuf-version }}/protobuf${{ matrix.protobuf-variant }}-${{ matrix.protobuf-version }}.tar.gz && tar xzvf protobuf${{ matrix.protobuf-variant }}-${{ matrix.protobuf-version }}.tar.gz
 
     - name: Build ProtoBuf ${{ matrix.protobuf-version }} via autotools
-      if: steps.cache-depends.outputs.cache-hit != 'true' && ${{ matrix.protobuf-variant }} == '-all'
+      if: (steps.cache-depends.outputs.cache-hit != 'true') && (${{ matrix.protobuf-variant }} == '-all')
       working-directory: protobuf-${{ matrix.protobuf-version }}
       run: |
         echo "${{ matrix.protobuf-variant }}"
