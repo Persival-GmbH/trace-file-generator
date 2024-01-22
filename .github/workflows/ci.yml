@@ -74,7 +74,6 @@ jobs:
         python -m venv .venv
         source .venv/bin/activate
         python -m pip install --upgrade pip
-        python -m pip install protobuf==${{ matrix.protobuf-version }}
         cd open-simulation-interface && pip install . && cd .. 
 
     - name: Run trace generator
